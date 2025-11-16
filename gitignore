@@ -1,0 +1,35 @@
+# ملفات نظام
+.DS_Store
+Thumbs.db
+*.log
+
+# ملفات بيئة التطوير
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ملفات npm (إذا كنت ستستخدمها لاحقاً)
+node_modules/
+npm-debug.log*
+
+# ملفات cache
+.cache/
+*.tmp
+
+# ملفات نظام التشغيل
+*.orig
+*.rej
+
+# ملفات البيئة (بيانات حساسة)
+.env
+.env.local
+.env.production
+
+# ملفات build (إذا أضفتها لاحقاً)
+/dist/
+/build/
+
+# ملفات Firebase (إذا أضفتها لاحقاً)
+.firebase/
+firebase-debug.log

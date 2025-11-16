@@ -33,3 +33,5 @@ npm-debug.log*
 # ملفات Firebase (إذا أضفتها لاحقاً)
 .firebase/
 firebase-debug.log
+# أضف هذا السطر في قسم "ملفات البيئة"
+firebase-config.js

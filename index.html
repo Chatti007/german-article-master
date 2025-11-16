@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🇩🇪 German Article Master</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg1:#667eea;--bg2:#764ba2;--card:#fff;--text:#2c3e50;--muted:#7f8c8d;--correct:#28a745;--wrong:#dc3545;--warning:#f1c40f}
+    body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;padding:20px;direction:ltr;color:var(--text)}
+    .container{max-width:500px;margin:0 auto;background:var(--card);border-radius:20px;padding:25px;box-shadow:0 15px 35px rgba(0,0,0,.2);position:relative}
+    .header{text-align:center;margin-bottom:30px}
+    .header h1{color:var(--text);font-size:28px;margin-bottom:8px}
+    .header p{color:var(--muted);font-size:16px}
+
+    .tabs{display:flex;background:#f8f9fa;border-radius:12px;padding:5px;margin-bottom:20px}
+    .tab{flex:1;text-align:center;padding:12px;cursor:pointer;border-radius:8px;transition:all .25s;font-weight:600}
+    .tab.active{background:var(--bg1);color:#fff}
+
+    .search-container{position:relative;margin-bottom:16px}
+    .search-input{width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:12px;font-size:16px;background:#f8f9fa}
+    .autocomplete-list{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid #e0e0e0;border-radius:0 0 12px 12px;max-height:200px;overflow:auto;display:none;z-index:50}
+    .autocomplete-item{padding:10px 14px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+    .autocomplete-item:hover{background:#f3f6ff}
+
+    .result{display:none;background:linear-gradient(135deg,#f8f9fa,#e9ecef);padding:25px;border-radius:16px;margin-top:15px;border-left:6px solid var(--bg1);text-align:center}
+    .article-word-container{display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:15px;min-height:120px}
+    .article-display{font-size:42px;font-weight:800;color:var(--bg1);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
+    .word-display{font-size:36px;font-weight:800;color:var(--text);line-height:1.2;word-break:break-word;max-width:100%}
+    .translation{font-size:18px;color:var(--muted);margin-top:12px;padding:8px 16px;background:rgba(255,255,255,0.7);border-radius:8px;display:inline-block}
+
+    .action-row{display:flex;gap:10px;justify-content:center;margin-top:20px}
+    .action-btn{background:var(--bg1);color:#fff;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:600;transition:all 0.3s ease}
+    .action-btn:hover{background:#5a6fd8;transform:translateY(-2px)}
+
+    .firebase-btn{background:#0f9d58;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;margin:5px auto;display:block;width:auto}
+    .delete-btn{background:#dc3545;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;margin:5px auto;display:block;width:auto}
+
+    .grammar-section{display:none;background:#fff;padding:20px;border-radius:16px;margin-top:20px;box-shadow:0 5px 20px rgba(0,0,0,0.1)}
+    .grammar-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:15px}
+    .grammar-table th{background:var(--bg1);color:white;padding:12px 8px;text-align:center;font-weight:700;font-size:14px}
+    .grammar-table td{padding:10px 8px;border-bottom:1px solid #f0f0f0;text-align:center;word-break:break-word;min-width:0}
+    .grammar-table tr:last-child td{border-bottom:none}
+    .grammar-table tr:hover td{background:#f8f9fa}
+
+    .advanced-grammar{display:none;background:#fff;padding:20px;border-radius:16px;margin-top:15px;box-shadow:0 3px 15px rgba(0,0,0,0.1)}
+    .grammar-rule{background:#f8f9fa;padding:15px;border-radius:10px;margin:10px 0;border-left:4px solid var(--bg1)}
+    .examples-list{padding-right:15px;margin-top:10px}
+    .examples-list li{margin:8px 0;padding:8px;background:rgba(255,255,255,0.7);border-radius:6px}
+
+    .quiz{display:none}
+    .quiz .qword{font-size:28px;font-weight:800;text-align:center;margin:14px 0;color:var(--text)}
+    
+    .options{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+    .opt{padding:14px;border-radius:12px;border:3px solid #e9e9e9;background:#fff;cursor:pointer;text-align:center;font-weight:800;font-size:16px;transition:all 0.3s ease;color:#2c3e50}
+    .opt:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.1)}
+    .opt.correct{background:var(--correct);color:#fff;border-color:var(--correct)}
+    .opt.wrong{background:var(--wrong);color:#fff;border-color:var(--wrong)}
+    
+    .quiz-stats{display:flex;justify-content:space-around;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:white;padding:12px;border-radius:12px;margin:15px 0;font-weight:700;font-size:16px}
+    .stat-item{text-align:center;flex:1}
+    .stat-number{font-size:24px;font-weight:800;display:block}
+    .stat-label{font-size:12px;opacity:0.9}
+    
+    .quiz-feedback{margin-top:12px;text-align:center;font-weight:700;font-size:18px;padding:12px;border-radius:10px}
+
+    .settings-fixed{position:fixed;top:18px;right:18px;background:rgba(255,255,255,.95);width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(0,0,0,.18);cursor:pointer;z-index:100}
+    .settings-fixed img{width:22px;height:22px}
+
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:200}
+    .modal{background:var(--card);padding:18px;border-radius:12px;max-width:420px;width:92%}
+    .lang-option{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;border:1px solid #eee;margin:8px 0;cursor:pointer}
+    .lang-option.active{border-color:var(--bg1);background:#f3f6ff}
+
+    .splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:300;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff}
+    .splash .box{background:rgba(255,255,255,.06);padding:30px;border-radius:12px;text-align:center}
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;background:rgba(0,0,0,.85);color:#fff;padding:10px 14px;border-radius:8px;font-weight:600;display:none;z-index:500}
+
+    body.dark{background:#0b0b0b;color:#eaeaea}
+    body.dark .container{background:#1a1a1a;color:#eaeaea}
+    body.dark .header h1{color:#eaeaea}
+    body.dark .header p{color:#b0b0b0}
+    body.dark .search-input{background:#2a2a2a;color:#eaeaea;border-color:#444}
+    body.dark .autocomplete-list{background:#2a2a2a;border-color:#444}
+    body.dark .autocomplete-item{color:#eaeaea;border-color:#444}
+    body.dark .autocomplete-item:hover{background:#333}
+    body.dark .result{background:#2a2a2a;color:#eaeaea}
+    body.dark .word-display{color:#eaeaea}
+    body.dark .translation{color:#b0b0b0;background:#333}
+    
+    body.dark .grammar-section{background:#2a2a2a;color:#eaeaea;border:1px solid #444}
+    body.dark .grammar-table th{background:var(--bg1);color:#fff}
+    body.dark .grammar-table td{border-bottom:1px solid #444;color:#eaeaea}
+    body.dark .grammar-table tr:hover td{background:#333}
+    
+    body.dark .advanced-grammar{background:#2a2a2a;color:#eaeaea;border:1px solid #444}
+    body.dark .grammar-rule{background:#333;color:#eaeaea}
+    body.dark .examples-list li{background:#2a2a2a;color:#eaeaea}
+    
+    body.dark .quiz .qword{color:#eaeaea}
+    body.dark .opt{background:#2a2a2a;color:#eaeaea;border-color:#444}
+    body.dark .opt:hover{background:#333;border-color:#667eea}
+    body.dark .opt.correct{background:var(--correct);color:#fff;border-color:var(--correct)}
+    body.dark .opt.wrong{background:var(--wrong);color:#fff;border-color:var(--wrong)}
+    
+    body.dark .tabs{background:#2a2a2a}
+    body.dark .tab{color:#b0b0b0}
+    body.dark .tab.active{background:var(--bg1);color:#fff}
+    body.dark .modal{background:#1a1a1a;color:#eaeaea}
+    body.dark .lang-option{background:#2a2a2a;border-color:#444;color:#eaeaea}
+    body.dark .lang-option.active{background:#333;border-color:var(--bg1)}
+    body.dark .firebase-btn{background:#0a7c46}
+    body.dark .delete-btn{background:#c82333}
+
+    @media(max-width:480px){
+        .options{grid-template-columns:1fr; gap:8px}
+        .container{padding:18px}
+        .article-display{font-size:36px}
+        .word-display{font-size:28px}
+        .article-word-container{min-height:100px}
+        .grammar-table{font-size:13px}
+        .grammar-table th, .grammar-table td{padding:8px 4px}
+        .quiz-stats{flex-direction:column; gap:10px}
+        .stat-number{font-size:20px}
+    }
+
+    @media(max-width:360px){
+        .article-display{font-size:32px}
+        .word-display{font-size:24px}
+        .article-word-container{min-height:90px}
+        .grammar-table{font-size:12px}
+    }
+  </style>
+</head>
+<body>
+  <div id="splash" class="splash">
+    <div class="box">
+      <h1>🇩🇪 German Article Master</h1>
+      <p id="splashSubtitle">تعلم أدوات التعريف الألمانية</p>
+    </div>
+  </div>
+
+  <div class="settings-fixed" id="settingsBtn" title="الإعدادات">
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'><path d='M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'/><path d='M19.4 13.1c.04-.36.06-.72.06-1.1s-.02-.74-.06-1.1l2.1-1.65a.5.5 0 0 0 .12-.63l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.1 7.1 0 0 0-1.9-1.1l-.38-2.65a.5.5 0 0 0-.5-.42h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.69.27-1.33.64-1.9 1.1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.63L4.6 10.9c-.04.36-.06.72-.06 1.1s.02.74.06 1.1L2.5 14.7a.5.5 0 0 0-.12.63l2 3.46c.14.24.43.33.68.22l2.49-1c.57.46 1.21.83 1.9 1.1l.38 2.65c.05.25.27.42.5.42h4c.24 0 .45-.17.5-.42l.38-2.65c.69-.27 1.33-.64 1.9-1.1l2.49 1c.25.1.54 0 .68-.22l2-3.46a.5.5 0 0 0-.12-.63l-2.14-1.59z'/></svg>" alt="settings">
+  </div>
+
+  <div class="container" id="app" style="display:none">
+    <div class="header">
+      <h1 id="appTitle">🇩🇪 German Article Master</h1>
+      <p id="appSubtitle">اكتشف der, die, das مع كل المعلومات النحوية</p>
+    </div>
+
+    <button id="initFirebaseBtn" class="firebase-btn" style="display:none;">
+      🔥 تهيئة قاعدة البيانات (شغّل مرة واحدة)
+    </button>
+
+    <button id="deleteDataBtn" class="delete-btn" style="display:none;">
+      🗑️ حذف البيانات القديمة
+    </button>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="search" id="tabSearch">🔍 البحث</div>
+      <div class="tab" data-tab="quiz" id="tabQuiz">🎯 اختبر معرفتك</div>
+    </div>
+
+    <div id="searchSection">
+      <div class="search-container">
+        <input id="searchInput" class="search-input" placeholder="اكتب الكلمة الألمانية..." autocomplete="off">
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <div id="result" class="result">
+        <div class="basic-info">
+          <div class="article-word-container">
+            <div class="article-display" id="articleDisplay"></div>
+            <div class="word-display" id="wordDisplay"></div>
+          </div>
+          <div class="translation" id="translationText"></div>
+        </div>
+
+        <div class="action-row">
+          <button id="copyBtn" class="action-btn">📋 نسخ</button>
+        </div>
+
+        <div id="basicGrammar" class="grammar-section">
+          <h4 id="basicGrammarTitle">📖 المعلومات الأساسية</h4>
+          <table class="grammar-table">
+            <thead>
+              <tr>
+                <th id="infoHeader">المعلومة</th>
+                <th id="valueHeader">القيمة</th>
+              </tr>
+            </thead>
+            <tbody id="basicGrammarTableBody">
+            </tbody>
+          </table>
+        </div>
+
+        <div id="advancedGrammar" class="advanced-grammar">
+          <h4 id="advancedGrammarTitle">🎓 القواعد النحوية المتقدمة</h4>
+          <div id="grammarRulesContent">
+          </div>
+        </div>
+      </div>
+
+      <div id="error" class="grammar-section" style="display:none;background:#fff5f5;border-left:5px solid #e53e3e;color:#e53e3e">⚠️ الكلمة غير موجودة في القاموس. جرب كلمات أخرى!</div>
+      <div id="offlineNotice" class="grammar-section" style="display:none;background:#fffbe6;border-left:5px solid #f1c40f;color:#7a5200">
+        <strong>🌐 ملاحظة:</strong> أنت غير متصل بالإنترنت. بعض المعلومات المتقدمة غير متاحة.
+      </div>
+    </div>
+
+    <div id="quizSection" class="quiz">
+      <div class="quiz-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="correctCount">0</span>
+          <span class="stat-label" id="correctLabel">صحيح</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="wrongCount">0</span>
+          <span class="stat-label" id="wrongLabel">خطأ</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="scorePercent">0%</span>
+          <span class="stat-label" id="scoreLabel">النسبة</span>
+        </div>
+      </div>
+
+      <div class="qword" id="quizWord"></div>
+      <div class="options" id="quizOptions">
+        <div class="opt" data-a="der">DER</div>
+        <div class="opt" data-a="die">DIE</div>
+        <div class="opt" data-a="das">DAS</div>
+      </div>
+      <div id="quizFeedback" class="quiz-feedback"></div>
+      <div style="height:10px"></div>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:10px">
+        <button id="nextQuiz" class="action-btn">التالي</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modalTitle">اختر لغتك</h3>
+      <div class="lang-option" data-lang="ar">🇸🇦 <strong>العربية</strong></div>
+      <div class="lang-option" data-lang="en">🇬🇧 <strong>English</strong></div>
+      <div class="lang-option" data-lang="de">🇩🇪 <strong>Deutsch</strong></div>
+      <div style="height:10px"></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="darkToggle">
+        <span id="darkModeLabel">تفعيل الوضع الليلي</span>
+      </label>
+      <div style="height:10px"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+        <button id="saveLang" class="action-btn">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✅ تم النسخ بنجاح</div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7Nzf1ZTtC2yWIfykS6RinwYmcIIlkZEc",
+      authDomain: "german-grammar-app.firebaseapp.com",
+      databaseURL: "https://german-grammar-app-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "german-grammar-app",
+      storageBucket: "german-grammar-app.firebasestorage.app",
+      messagingSenderId: "68770199693",
+      appId: "1:68770199693:web:461d5003229ec35c148ac4",
+      measurementId: "G-8Y9V1F3311"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let words = {};
+    const storage = {
+      get: function(k) { return localStorage.getItem(k); }, 
+      set: function(k, v) { localStorage.setItem(k, String(v)); }
+    };
+
+    let quizStats = {
+      correct: 0,
+      wrong: 0,
+      total: 0
+    };
+
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+    const modal = document.getElementById('modal');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const saveLang = document.getElementById('saveLang');
+    const langOptions = Array.from(document.querySelectorAll('.lang-option'));
+    const darkToggle = document.getElementById('darkToggle');
+    const searchInput = document.getElementById('searchInput');
+    const autocompleteList = document.getElementById('autocompleteList');
+    const result = document.getElementById('result');
+    const articleDisplay = document.getElementById('articleDisplay');
+    const wordDisplay = document.getElementById('wordDisplay');
+    const translationText = document.getElementById('translationText');
+    const basicGrammar = document.getElementById('basicGrammar');
+    const basicGrammarTableBody = document.getElementById('basicGrammarTableBody');
+    const advancedGrammar = document.getElementById('advancedGrammar');
+    const grammarRulesContent = document.getElementById('grammarRulesContent');
+    const errorBox = document.getElementById('error');
+    const offlineNotice = document.getElementById('offlineNotice');
+    const copyBtn = document.getElementById('copyBtn');
+    const toast = document.getElementById('toast');
+    const modalTitle = document.getElementById('modalTitle');
+    const darkModeLabel = document.getElementById('darkModeLabel');
+    const splashSubtitle = document.getElementById('splashSubtitle');
+    const initFirebaseBtn = document.getElementById('initFirebaseBtn');
+    const deleteDataBtn = document.getElementById('deleteDataBtn');
+
+    const tabSearch = document.getElementById('tabSearch');
+    const tabQuiz = document.getElementById('tabQuiz');
+    const searchSection = document.getElementById('searchSection');
+    const quizSection = document.getElementById('quizSection');
+    const quizWord = document.getElementById('quizWord');
+    const quizOptions = document.getElementById('quizOptions');
+    const quizFeedback = document.getElementById('quizFeedback');
+    const nextQuiz = document.getElementById('nextQuiz');
+    
+    const correctCount = document.getElementById('correctCount');
+    const wrongCount = document.getElementById('wrongCount');
+    const scorePercent = document.getElementById('scorePercent');
+    const correctLabel = document.getElementById('correctLabel');
+    const wrongLabel = document.getElementById('wrongLabel');
+    const scoreLabel = document.getElementById('scoreLabel');
+
+    const T = {
+      ar: {
+        search: '🔍 البحث', quiz: '🎯 اختبر معرفتك', placeholder: 'اكتب الكلمة الألمانية...',
+        subtitle: 'اكتشف der, die, das مع كل المعلومات النحوية', copied: '✅ تم النسخ بنجاح',
+        offline: '🌐 أنت غير متصل بالإنترنت. بعض المعلومات المتقدمة غير متاحة.',
+        notfound: '⚠️ الكلمة غير موجودة في القاموس. جرب كلمات أخرى!', copyBtn: '📋 نسخ',
+        nextBtn: 'التالي', saveBtn: 'حفظ', modalTitle: 'اختر لغتك', darkModeLabel: 'تفعيل الوضع الليلي',
+        splashSubtitle: 'تعلم أدوات التعريف الألمانية', correct: 'صحيح ✅', wrong: 'خطأ ❌',
+        correctAnswer: 'الإجابة الصحيحة:', 
+        basicGrammar: '📖 المعلومات الأساسية', advancedGrammar: '🎓 القواعد النحوية المتقدمة',
+        infoHeader: 'المعلومة', valueHeader: 'القيمة',
+        level: 'المستوى', plural: 'الجمع', cases: 'حالات الإعراب', grammarRules: 'القواعد النحوية',
+        examples: 'أمثلة', noAdvancedData: '⚠️ اتصل بالإنترنت لعرض المعلومات النحوية المتقدمة.',
+        noWords: 'لا توجد كلمات متاحة للعبة', finished: 'انتهت الأسئلة!', 
+        allFinished: 'لقد أنهيت جميع الأسئلة المتاحة', initFirebase: '🔥 تهيئة قاعدة البيانات (شغّل مرة واحدة)',
+        initSuccess: '✅ تم تهيئة قاعدة البيانات بنجاح!', initError: '❌ فشل في التهيئة: ',
+        deleteData: '🗑️ حذف البيانات القديمة', deleteSuccess: '✅ تم حذف البيانات القديمة',
+        deleteError: '❌ فشل في الحذف: ',
+        stats: { correct: 'صحيح', wrong: 'خطأ', score: 'النسبة' },
+        cases: { nominative: 'المرفوع', genitive: 'المجرور', dative: 'المضاف إليه', accusative: 'المنصوب' },
+        loadingFromJson: '🔄 جاري البحث في القاموس الخارجي...',
+        wordAdded: '✅ تم إضافة الكلمة من القاموس الخارجي',
+        frequency: 'التكرار'
+      },
+      en: {
+        search: '🔍 Search', quiz: '🎯 Quiz', placeholder: 'Type a German word...',
+        subtitle: 'Discover der, die, das with grammar details', copied: '✅ Copied successfully',
+        offline: '🌐 You are offline. Some advanced information is not available.',
+        notfound: '⚠️ Word not found in dictionary. Try another!', copyBtn: '📋 Copy',
+        nextBtn: 'Next', saveBtn: 'Save', modalTitle: 'Choose your language', 
+        darkModeLabel: 'Enable Dark Mode', splashSubtitle: 'Learn German articles', 
+        correct: 'Correct ✅', wrong: 'Wrong ❌', correctAnswer: 'Correct answer:',
+        basicGrammar: '📖 Basic Information', advancedGrammar: '🎓 Advanced Grammar',
+        infoHeader: 'Information', valueHeader: 'Value',
+        level: 'Level', plural: 'Plural', cases: 'Grammar Cases', grammarRules: 'Grammar Rules',
+        examples: 'Examples', noAdvancedData: '⚠️ Connect to the internet to view advanced grammar information.',
+        noWords: 'No words available for quiz', finished: 'Questions finished!',
+        allFinished: 'You have completed all available questions', 
+        initFirebase: '🔥 Initialize Database (Run Once)', initSuccess: '✅ Database initialized successfully!',
+        initError: '❌ Initialization failed: ', deleteData: '🗑️ Delete Old Data',
+        deleteSuccess: '✅ Old data deleted successfully', deleteError: '❌ Delete failed: ',
+        stats: { correct: 'Correct', wrong: 'Wrong', score: 'Score' },
+        cases: { nominative: 'Nominative', genitive: 'Genitive', dative: 'Dative', accusative: 'Accusative' },
+        loadingFromJson: '🔄 Searching in external dictionary...',
+        wordAdded: '✅ Word added from external dictionary',
+        frequency: 'Frequency'
+      },
+      de: {
+        search: '🔍 Suche', quiz: '🎯 Teste dich', placeholder: 'Geben Sie ein deutsches Wort ein...',
+        subtitle: 'Finde der, die, das mit Grammatik', copied: '✅ Erfolgreich kopiert',
+        offline: '🌐 Sie sind offline. Einige erweiterte Informationen sind nicht verfügbar.',
+        notfound: '⚠️ Wort nicht im Wörterbuch. Versuche ein anderes!', copyBtn: '📋 Kopieren',
+        nextBtn: 'Weiter', saveBtn: 'Speichern', modalTitle: 'Wählen Sie Ihre Sprache',
+        darkModeLabel: 'Nachtmodus aktivieren', splashSubtitle: 'Lernen Sie deutsche Artikel',
+        correct: 'Richtig ✅', wrong: 'Falsch ❌', correctAnswer: 'Richtige Antwort:',
+        basicGrammar: '📖 Grundinformationen', advancedGrammar: '🎓 Erweiterte Grammatik',
+        infoHeader: 'Information', valueHeader: 'Wert',
+        level: 'Niveau', plural: 'Plural', cases: 'Grammatikfälle', grammarRules: 'Grammatikregeln',
+        examples: 'Beispiele', noAdvancedData: '⚠️ Verbinden Sie sich mit dem Internet, um erweiterte Grammatikinformationen anzuzeigen.',
+        noWords: 'Keine Wörter für das Quiz verfügbar', finished: 'Fragen beendet!',
+        allFinished: 'Sie haben alle verfügbaren Fragen abgeschlossen',
+        initFirebase: '🔥 Datenbank initialisieren (Einmal ausführen)',
+        initSuccess: '✅ Datenbank erfolgreich initialisiert!', initError: '❌ Initialisierung fehlgeschlagen: ',
+        deleteData: '🗑️ Alte Daten löschen', deleteSuccess: '✅ Alte Daten erfolgreich gelöscht',
+        deleteError: '❌ Löschen fehlgeschlagen: ',
+        stats: { correct: 'Richtig', wrong: 'Falsch', score: 'Punktzahl' },
+        cases: { nominative: 'Nominativ', genitive: 'Genitiv', dative: 'Dativ', accusative: 'Akkusativ' },
+        loadingFromJson: '🔄 Suche im externen Wörterbuch...',
+        wordAdded: '✅ Wort aus externem Wörterbuch hinzugefügt',
+        frequency: 'Häufigkeit'
+      }
+    };
+
+    function updateQuizStats() {
+      correctCount.textContent = quizStats.correct;
+      wrongCount.textContent = quizStats.wrong;
+      
+      const total = quizStats.correct + quizStats.wrong;
+      const percentage = total > 0 ? Math.round((quizStats.correct / total) * 100) : 0;
+      scorePercent.textContent = percentage + '%';
+      
+      if (percentage >= 80) {
+        scorePercent.style.color = '#28a745';
+      } else if (percentage >= 60) {
+        scorePercent.style.color = '#ffc107';
+      } else {
+        scorePercent.style.color = '#dc3545';
+      }
+    }
+
+    // 🔥 دالة محسنة للبحث في ملف JSON
+    async function searchWordInJson(word) {
+      try {
+        console.log(`🔍 البحث عن الكلمة "${word}" في القاموس الخارجي...`);
+        
+        const response = await fetch('german_words.json');
+        if (!response.ok) {
+          throw new Error('فشل في تحميل ملف القاموس');
+        }
+        
+        const jsonData = await response.json();
+        
+        // البحث بحساسية للحالة
+        const wordKey = Object.keys(jsonData).find(
+          key => key.toLowerCase() === word.toLowerCase()
+        );
+        
+        if (wordKey && jsonData[wordKey]) {
+          console.log(`✅ تم العثور على الكلمة "${wordKey}" في القاموس الخارجي`);
+          const wordData = jsonData[wordKey];
+          
+          // تحويل البيانات من الهيكل القديم إلى الهيكل الجديد
+          const convertedData = convertToNewStructure(wordData, wordKey);
+          
+          // إضافة الكلمة إلى قاعدة البيانات المحلية
+          words[wordKey] = convertedData;
+          
+          // تحديث التخزين المحلي
+          updateLocalStorage();
+          
+          return convertedData;
+        } else {
+          console.log(`❌ الكلمة "${word}" غير موجودة في القاموس الخارجي`);
+          return null;
+        }
+      } catch (error) {
+        console.error('❌ خطأ في البحث في القاموس الخارجي:', error);
+        return null;
+      }
+    }
+
+    // 🔥 دالة لتحويل الهيكل القديم إلى الجديد
+    function convertToNewStructure(oldData, word) {
+      const newData = {
+        basic: {
+          article: oldData.article ? oldData.article.charAt(0).toUpperCase() + oldData.article.slice(1) : '',
+          translations: {
+            ar: oldData.translation || '',
+            en: oldData.translation || '',
+            de: word
+          },
+          level: oldData.level || ''
+        }
+      };
+
+      // إضافة البيانات المتقدمة إذا كانت متوفرة
+      if (oldData.plural || oldData.singular || oldData.plural_forms || oldData.frequency) {
+        newData.advanced = {};
+        
+        if (oldData.plural) {
+          newData.advanced.plural = oldData.plural;
+        }
+        
+        if (oldData.frequency) {
+          newData.advanced.frequency = oldData.frequency;
+        }
+        
+        // معالجة حالات الإعراب
+        const cases = {};
+        if (oldData.singular) {
+          if (oldData.singular.nominative) cases.nominative = oldData.singular.nominative;
+          if (oldData.singular.genitive) cases.genitive = oldData.singular.genitive;
+          if (oldData.singular.dative) cases.dative = oldData.singular.dative;
+          if (oldData.singular.accusative) cases.accusative = oldData.singular.accusative;
+        }
+        
+        // إذا لم تكن هناك حالات إعراب محددة، ننشئها افتراضياً
+        if (Object.keys(cases).length === 0 && oldData.article) {
+          const article = oldData.article.charAt(0).toUpperCase() + oldData.article.slice(1);
+          cases.nominative = `${article} ${word}`;
+          cases.accusative = `${article} ${word}`;
+        }
+        
+        if (Object.keys(cases).length > 0) {
+          newData.advanced.cases = cases;
+        }
+      }
+      
+      return newData;
+    }
+
+    function updateLocalStorage() {
+      const basicData = {};
+      Object.keys(words).forEach(word => {
+        if (words[word].basic) {
+          basicData[word] = {
+            basic: {
+              article: words[word].basic.article,
+              translations: words[word].basic.translations,
+              level: words[word].basic.level
+            }
+          };
+        }
+      });
+      
+      localStorage.setItem('german_words_basic_cache', JSON.stringify(basicData));
+      localStorage.setItem('german_words_cache_time', Date.now().toString());
+    }
+
+    async function loadWords() {
+      try {
+        console.log('جارٍ تحميل الكلمات من Firebase...');
+        const snapshot = await database.ref('german_words').once('value');
+        
+        if (snapshot.exists()) {
+          words = snapshot.val();
+          console.log('✅ تم تحميل الكلمات:', Object.keys(words).length);
+          updateLocalStorage();
+          
+          initFirebaseBtn.style.display = 'none';
+          deleteDataBtn.style.display = 'none';
+        } else {
+          const cachedData = localStorage.getItem('german_words_basic_cache');
+          const cacheTime = localStorage.getItem('german_words_cache_time');
+          
+          if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime)) < 86400000) {
+            words = JSON.parse(cachedData);
+            console.log('✅ تم تحميل البيانات الأساسية من الذاكرة المؤقتة:', Object.keys(words).length);
+            initFirebaseBtn.style.display = 'none';
+            deleteDataBtn.style.display = 'none';
+          } else {
+            console.log('⚠️ لا توجد بيانات في Firebase أو الذاكرة المؤقتة');
+            words = {};
+            initFirebaseBtn.style.display = 'block';
+            deleteDataBtn.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('❌ خطأ في تحميل الكلمات:', error);
+        const cachedData = localStorage.getItem('german_words_basic_cache');
+        if (cachedData) {
+          words = JSON.parse(cachedData);
+          console.log('✅ تم تحميل البيانات الأساسية من الذاكرة المؤقتة بسبب الخطأ:', Object.keys(words).length);
+        } else {
+          words = {};
+        }
+        initFirebaseBtn.style.display = 'block';
+        deleteDataBtn.style.display = 'none';
+      }
+    }
+
+    // 🔥 دالة renderWord محسنة
+    function renderWord(w, data) {
+      result.style.display = 'block';
+      
+      const basicData = data.basic || data;
+      articleDisplay.textContent = (basicData.article || '').toUpperCase();
+      wordDisplay.textContent = w;
+      
+      const lang = storage.get('app_lang') || 'ar';
+      const translation = basicData.translations ? basicData.translations[lang] : basicData.translation;
+      translationText.textContent = translation || '';
+
+      const t = T[storage.get('app_lang')] || T.ar;
+      
+      basicGrammar.style.display = 'block';
+      document.getElementById('basicGrammarTitle').textContent = t.basicGrammar;
+      document.getElementById('infoHeader').textContent = t.infoHeader;
+      document.getElementById('valueHeader').textContent = t.valueHeader;
+      
+      basicGrammarTableBody.innerHTML = '';
+      
+      if (basicData.level && basicData.level.trim()) {
+        addBasicInfoRow(t.level, basicData.level);
+      }
+      
+      advancedGrammar.style.display = 'none';
+      
+      if (data.advanced) {
+        advancedGrammar.style.display = 'block';
+        document.getElementById('advancedGrammarTitle').textContent = t.advancedGrammar;
+        
+        let advancedHTML = '';
+        
+        if (data.advanced.plural && data.advanced.plural.trim()) {
+          addBasicInfoRow(t.plural, data.advanced.plural);
+        }
+        
+        if (data.advanced.frequency && data.advanced.frequency.trim()) {
+          addBasicInfoRow(t.frequency, data.advanced.frequency);
+        }
+        
+        if (data.advanced.cases) {
+          advancedHTML += `
+            <div class="grammar-rule">
+              <h5>${t.cases}:</h5>
+              <table class="grammar-table">
+                <tbody>
+                  ${Object.entries(data.advanced.cases)
+                    .filter(([_, value]) => value && value.trim())
+                    .map(([caseKey, caseValue]) => `
+                    <tr>
+                      <td style="font-weight:700; width:40%">${t.cases[caseKey] || caseKey}</td>
+                      <td>${caseValue}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+        
+        grammarRulesContent.innerHTML = advancedHTML || `<p>${t.noAdvancedData}</p>`;
+      }
+      
+      function addBasicInfoRow(label, value) {
+        if (!value || !value.trim()) return;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="font-weight:700; color: var(--bg1)">${label}</td>
+          <td>${value}</td>
+        `;
+        basicGrammarTableBody.appendChild(row);
+      }
+    }
+
+    async function selectWord(w) { 
+      let d = words[w] || null; 
+      
+      if (!d) { 
+        const t = T[storage.get('app_lang')] || T.ar;
+        errorBox.textContent = t.loadingFromJson;
+        errorBox.style.display = 'block';
+        result.style.display = 'none';
+        
+        const jsonData = await searchWordInJson(w);
+        if (jsonData) {
+          d = jsonData;
+          errorBox.style.display = 'none';
+          result.style.display = 'block';
+          showToast(t.wordAdded);
+        } else {
+          showNotFound();
+          return;
+        }
+      } 
+      
+      hideNotFound(); 
+      renderWord(w, d); 
+    }
+
+    function showNotFound() { 
+      const t = T[storage.get('app_lang')] || T.ar;
+      errorBox.textContent = t.notfound;
+      errorBox.style.display = 'block'; 
+      result.style.display = 'none'; 
+    }
+    
+    function hideNotFound() { errorBox.style.display = 'none'; }
+
+    function showToast(message) { 
+      if (message) toast.textContent = message;
+      toast.style.display = 'block'; 
+      setTimeout(() => { toast.style.display = 'none'; }, 2000); 
+    }
+
+    // 🔥 إصلاح لعبة الاختبار
+    let quizList = [], currentQuiz = null;
+    
+    function startQuiz() { 
+      quizStats = { correct: 0, wrong: 0, total: 0 };
+      updateQuizStats();
+      
+      // 🔥 إصلاح: تضمين جميع الكلمات المتاحة
+      const allWords = Object.keys(words).filter(k => {
+        const wordData = words[k];
+        const article = wordData.basic ? wordData.basic.article : wordData.article;
+        return article && article.trim();
+      });
+      
+      console.log('الكلمات المتاحة للاختبار:', allWords.length);
+      
+      quizList = allWords.slice().sort(() => 0.5 - Math.random()).slice(0, 20); // 🔥 تحديد 20 كلمة فقط للاختبار
+      const t = T[storage.get('app_lang')] || T.ar;
+      
+      correctLabel.textContent = t.stats.correct;
+      wrongLabel.textContent = t.stats.wrong;
+      scoreLabel.textContent = t.stats.score;
+      
+      if (!quizList.length) { 
+        quizWord.textContent = ''; 
+        quizFeedback.textContent = t.noWords; 
+        return;
+      }
+      nextQuestion();
+    }
+    
+    function nextQuestion() { 
+      const t = T[storage.get('app_lang')] || T.ar;
+      quizFeedback.textContent = ''; 
+      quizOptions.querySelectorAll('.opt').forEach(o => { 
+        o.classList.remove('correct', 'wrong'); 
+        o.style.pointerEvents = 'auto'; 
+      });
+      
+      if (quizList.length === 0) { 
+        quizWord.textContent = t.finished; 
+        quizFeedback.textContent = t.allFinished; 
+        return; 
+      }
+      
+      const w = quizList.pop(); 
+      currentQuiz = w; 
+      quizWord.textContent = w; 
+    }
+    
+    quizOptions.addEventListener('click', function(e) {
+      const el = e.target.closest('.opt'); 
+      if (!el || !currentQuiz) return; 
+      
+      const ans = el.dataset.a; 
+      const wordData = words[currentQuiz];
+      const correct = wordData.basic ? wordData.basic.article : wordData.article;
+      const correctLower = correct ? correct.toLowerCase() : '';
+      const t = T[storage.get('app_lang')] || T.ar;
+      
+      if (ans === correctLower) { 
+        el.classList.add('correct'); 
+        quizFeedback.textContent = t.correct;
+        quizFeedback.style.color = '#28a745';
+        quizFeedback.style.background = 'rgba(40, 167, 69, 0.1)';
+        quizStats.correct++;
+      } else { 
+        el.classList.add('wrong'); 
+        const correctOption = document.querySelector('.opt[data-a="' + correctLower + '"]');
+        if (correctOption) {
+          correctOption.classList.add('correct');
+        }
+        quizFeedback.textContent = t.wrong + ' ' + t.correctAnswer + ' ' + correct;
+        quizFeedback.style.color = '#dc3545';
+        quizFeedback.style.background = 'rgba(220, 53, 69, 0.1)';
+        quizStats.wrong++;
+      }
+      
+      updateQuizStats();
+      quizOptions.querySelectorAll('.opt').forEach(o => { 
+        o.style.pointerEvents = 'none'; 
+      });
+    });
+    
+    nextQuiz.addEventListener('click', nextQuestion);
+
+    // باقي الدوال والإعدادات
+    tabSearch.addEventListener('click', function() { 
+      tabSearch.classList.add('active'); 
+      tabQuiz.classList.remove('active'); 
+      searchSection.style.display = 'block'; 
+      quizSection.style.display = 'none'; 
+    });
+    
+    tabQuiz.addEventListener('click', function() { 
+      tabQuiz.classList.add('active'); 
+      tabSearch.classList.remove('active'); 
+      searchSection.style.display = 'none'; 
+      quizSection.style.display = 'block'; 
+      startQuiz(); 
+    });
+
+    copyBtn.addEventListener('click', function() {
+      const txt = articleDisplay.textContent + ' ' + wordDisplay.textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(() => showToast()).catch(() => showToast());
+      } else { showToast(); }
+    });
+
+    searchInput.addEventListener('input', function() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) { autocompleteList.style.display = 'none'; return; }
+      
+      const keys = Object.keys(words);
+      const results = keys.filter(k => k.toLowerCase().includes(q)).slice(0, 20);
+      
+      if (!results.length) { autocompleteList.style.display = 'none'; return; }
+      
+      autocompleteList.innerHTML = results.map(r => 
+        `<div class="autocomplete-item" data-word="${r}">${r}</div>`
+      ).join('');
+      autocompleteList.style.display = 'block';
+      
+      document.querySelectorAll('.autocomplete-item').forEach(it => { 
+        it.addEventListener('click', function() { 
+          selectWord(it.dataset.word); 
+          autocompleteList.style.display = 'none'; 
+        }); 
+      });
+    });
+
+    searchInput.addEventListener('keydown', function(e) { 
+      if (e.key === 'Enter') { 
+        const w = searchInput.value.trim(); 
+        if (w) selectWord(w); 
+      } 
+    });
+
+    // التهيئة
+    async function init() {
+      console.log('جاري تهيئة التطبيق...');
+      await loadWords();
+      
+      const lang = storage.get('app_lang') || null;
+      const dark = storage.get('dark_mode') === '1';
+      if (dark) document.body.classList.add('dark');
+
+      setTimeout(function() {
+        splash.style.display = 'none';
+        app.style.display = 'block';
+        if (!lang) openModal(); else applyLang(lang);
+        updateOnline();
+      }, 2000);
+    }
+
+    init();
+
+    // إضافة event listeners أخرى...
+    document.addEventListener('click', function(e) { 
+      if (!e.target.closest('.search-container')) autocompleteList.style.display = 'none'; 
+    });
+
+    modal.addEventListener('click', function(e) { 
+      if (e.target === modal) modal.style.display = 'none'; 
+    });
+
+    function updateOnline() { 
+      if (navigator.onLine) { 
+        offlineNotice.style.display = 'none'; 
+      } else { 
+        offlineNotice.style.display = 'block'; 
+      }
+    }
+    window.addEventListener('online', updateOnline); 
+    window.addEventListener('offline', updateOnline);
+
+    // دوال الإعدادات واللغة
+    function openModal() { modal.style.display = 'flex'; }
+    function closeModal() { modal.style.display = 'none'; }
+
+    settingsBtn.addEventListener('click', function() {
+      const cur = storage.get('app_lang') || 'ar';
+      langOptions.forEach(function(el) { 
+        el.classList.toggle('active', el.dataset.lang === cur); 
+      });
+      darkToggle.checked = storage.get('dark_mode') === '1';
+      openModal();
+    });
+
+    langOptions.forEach(function(el) { 
+      el.addEventListener('click', function() {
+        langOptions.forEach(function(x) { x.classList.remove('active'); });
+        el.classList.add('active');
+        modal.dataset.sel = el.dataset.lang;
+      });
+    });
+
+    saveLang.addEventListener('click', function() {
+      const pick = modal.dataset.sel || storage.get('app_lang') || 'ar';
+      storage.set('app_lang', pick);
+      storage.set('dark_mode', darkToggle.checked ? '1' : '0');
+      if (darkToggle.checked) document.body.classList.add('dark'); 
+      else document.body.classList.remove('dark');
+      applyLang(pick);
+      closeModal();
+    });
+
+    function applyLang(lang) {
+      const t = T[lang] || T.ar;
+      document.getElementById('appSubtitle').textContent = t.subtitle;
+      document.getElementById('tabSearch').textContent = t.search;
+      document.getElementById('tabQuiz').textContent = t.quiz;
+      searchInput.placeholder = t.placeholder;
+      toast.textContent = t.copied;
+      offlineNotice.textContent = t.offline;
+      errorBox.textContent = t.notfound;
+      copyBtn.textContent = t.copyBtn;
+      nextQuiz.textContent = t.nextBtn;
+      saveLang.textContent = t.saveBtn;
+      modalTitle.textContent = t.modalTitle;
+      darkModeLabel.textContent = t.darkModeLabel;
+      splashSubtitle.textContent = t.splashSubtitle;
+      initFirebaseBtn.textContent = t.initFirebase;
+      deleteDataBtn.textContent = t.deleteData;
+      
+      correctLabel.textContent = t.stats.correct;
+      wrongLabel.textContent = t.stats.wrong;
+      scoreLabel.textContent = t.stats.score;
+      
+      if (wordDisplay.textContent) {
+        const currentWord = wordDisplay.textContent;
+        if (words[currentWord]) {
+          renderWord(currentWord, words[currentWord]);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

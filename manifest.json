@@ -1,26 +1,71 @@
 {
   "name": "German Article Master",
   "short_name": "GermanMaster",
-  "description": "Learn German articles der, die, das with grammar details",
-  "start_url": "/german-article-master/",
+  "start_url": "https://chatti007.github.io/german-article-master",
   "display": "standalone",
-  "theme_color": "#667eea",
-  "background_color": "#764ba2",
   "icons": [
     {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
+      "sizes": "114x114",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-114x114-09ce42d3ca4b.png"
     },
     {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png"
+      "sizes": "120x120",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-120x120-92bd46d04241.png"
     },
     {
-      "src": "/apple-touch-icon.png",
+      "sizes": "144x144",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-144x144-b882e354c005.png"
+    },
+    {
+      "sizes": "152x152",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-152x152-5f777cdc30ae.png"
+    },
+    {
       "sizes": "180x180",
-      "type": "image/png"
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-180x180-a80b8e11abe2.png"
+    },
+    {
+      "sizes": "57x57",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-57x57-22f09f5b3a64.png"
+    },
+    {
+      "sizes": "60x60",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-60x60-19037ac897bf.png"
+    },
+    {
+      "sizes": "72x72",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-72x72-e090c8a282d0.png"
+    },
+    {
+      "sizes": "76x76",
+      "src": "https://github.githubassets.com/assets/apple-touch-icon-76x76-a4523d80afb4.png"
+    },
+    {
+      "src": "https://github.githubassets.com/assets/app-icon-192-bcc967ab9829.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://github.githubassets.com/assets/app-icon-512-7f9c4ff2e960.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.github.android",
+      "id": "com.github.android"
+    }
+  ],
+  "theme_color": "#677feb",
+  "background_color": "#754aa1",
+  "description": "Learn German articles der, die, das with grammar details",
+  "categories": [
+    "books",
+    "education",
+    "games",
+    "kids"
   ]
 }

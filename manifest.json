@@ -1,6 +1,6 @@
 {
   "name": "German Article Master",
-  "short_name": "German Master",
+  "short_name": "German Master", 
   "description": "Learn German articles easily",
   "start_url": "/german-article-master/",
   "display": "standalone",
@@ -14,7 +14,7 @@
       "type": "image/png"
     },
     {
-      "src": "/german-article-master/AppImages/Android/android-launchericon-512-512.png",
+      "src": "/german-article-master/AppImages/Android/android-launchericon-512-512.png", 
       "sizes": "512x512",
       "type": "image/png"
     }

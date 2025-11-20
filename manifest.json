@@ -6,17 +6,17 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "scope": "/german-article-master/",
   "icons": [
     {
-      "src": "AppImages/Android/android192-192.png",
+      "src": "/german-article-master/AppImages/Android/android192-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "AppImages/Android/android-launchericon-512-512.png",
+      "src": "/german-article-master/AppImages/Android/android-launchericon-512-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
-

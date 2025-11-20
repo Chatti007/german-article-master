@@ -1,0 +1,21 @@
+{
+  "name": "German Article Master",
+  "short_name": "GermanMaster", 
+  "description": "Learn German articles der, die, das with grammar details",
+  "start_url": "/german-article-master/",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#764ba2",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

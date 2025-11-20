@@ -1,6 +1,6 @@
 {
   "name": "German Article Master",
-  "short_name": "GermanMaster", 
+  "short_name": "GermanMaster",
   "description": "Learn German articles der, die, das with grammar details",
   "start_url": "/german-article-master/",
   "display": "standalone",
@@ -13,7 +13,7 @@
       "type": "image/png"
     },
     {
-      "src": "/favicon-16x16.png", 
+      "src": "/favicon-16x16.png",
       "sizes": "16x16",
       "type": "image/png"
     },

@@ -2,7 +2,7 @@
   "name": "German Article Master",
   "short_name": "German Master",
   "description": "Learn German articles easily",
-  "start_url": "/",
+  "start_url": "/german-article-master/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
@@ -19,3 +19,4 @@
     }
   ]
 }
+

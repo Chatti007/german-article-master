@@ -3,6 +3,7 @@
   "short_name": "German Master", 
   "description": "Learn German articles easily",
   "start_url": "/german-article-master/",
+  "id": "/german-article-master/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
@@ -14,7 +15,7 @@
       "type": "image/png"
     },
     {
-      "src": "/german-article-master/AppImages/Android/android-launchericon-512-512.png", 
+      "src": "/german-article-master/AppImages/Android/android-launchericon-512-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
